@@ -1,45 +1,43 @@
-"""
-Author: yutinglin
-environment: PyCharm
-py_version: 3.6
-date: 2019/04/18
-"""
+# -*- coding: utf-8 -*-
+# Author: yutinglin
+# environment: PyCharm
+# py_version: 3.6
+# file_name: app.py
+# create_time: 2019/04/18 10:43
+##########################
 
 from flask import Flask
 from flask import request
 from elasticsearch import Elasticsearch
 import json
 
-from clientAPI import post_utils
-from clientAPI import get_utils
+#from .clientAPI import post_utils
+from Server.clientAPI import get_utils
 
 
 app = Flask(__name__)
+es = Elasticsearch(
+        ['es-cn-45912d6qn0008bb67.public.elasticsearch.aliyuncs.com'],
+        http_auth=('elastic', 'MDR_test'),
+        port=9200,
+        use_ssl=False
+    )
 
 
-@app.route('/clients', methods=['GET', 'POST'])
-def listen_to_request():
+@app.route('/getSingle', methods=['GET'])
+def listen_to_request_single():
     if request.method == 'GET':
-        return get_utils.get_request(request)
-    elif request.method == 'POST':
-        return post_utils.post_request()
-    return 'Request type should be either GET or POST; got {} instead'.format(request.method)
+        return get_utils.get_request(request, True)
+    return 'Request type should be GET; got {} instead'.format(request.method)
 
 
-def request_info(name, timestamp):
-    if not name or not timestamp:
-        return "Failed"
-
-
-    print("\n\n--- Request sent ---\n\n")
-    total = resp.get('hits', {}).get('total', -1)
-    print()
-    print("\n\n--- Content printed ---\n\n")
-    return json.dumps(resp.get('hits', {}).get('hits', [])[:10], indent=4)
+@app.route('/getMulti', methods=['GET'])
+def listen_to_request_multi():
+    if request.method == 'GET':
+        return get_utils.get_request(request, False)
+    return 'Request type should be GET; got {} instead'.format(request.method)
 
 
 if __name__ == '__main__':
-    post_utils.test()
-
-    #app.run(debug=True, port=8874)
-    #app.run(debug=True, host='211.75.30.99', port=8874)
+    app.run(debug=True)
+    #app.run(host='0.0.0.0', port=80)
