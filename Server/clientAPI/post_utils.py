@@ -1,5 +1,6 @@
 import json
 from elasticsearch import Elasticsearch
+import env
 
 
 def post_request(req):
@@ -8,9 +9,12 @@ def post_request(req):
     :param req:
     :return:
     """
-    if not req:
-        return "ERR: Request is empty"
-    return insert_indexes(req)
+    try:
+        if not req:
+            return "ERR: Request is empty"
+        return insert_indexes(req)
+    except Exception as e:
+        return "post request caught unexpected exception: {};\n{}".format(type(e), str(e))
 
 
 def insert_indexes(req):
@@ -23,7 +27,7 @@ def insert_indexes(req):
         data = json.loads(req.form.get('data', '[]'))
         if not data or not data.get('d_list'):
             return "Post failed with data: {}".format(data)
-        index = data.get('index', 'patient-temperature-test')
+        index = data.get('index', env.es_index)
         doc_type = 'patient_temperature'
         count = 0
         d_list = data.get('d_list', [])
@@ -31,8 +35,7 @@ def insert_indexes(req):
         return "Caught exception {}; {}".format(type(e), str(e))
 
     es = Elasticsearch(
-        ['es-cn-45912d6qn0008bb67.public.elasticsearch.aliyuncs.com'],
-        http_auth=('elastic', 'MDR_test'),
+        env.es_hosts,
         port=9200,
         use_ssl=False
     )

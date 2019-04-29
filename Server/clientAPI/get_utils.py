@@ -1,5 +1,6 @@
 import json
 from elasticsearch import Elasticsearch
+import env
 
 
 def get_request(req, is_single):
@@ -9,9 +10,12 @@ def get_request(req, is_single):
     :param is_single: if it's a single get request
     :return:
     """
-    if not req:
-        return "ERR: Request is empty"
-    return get_single_req(req) if is_single else get_multi_req(req)
+    try:
+        if not req:
+            return "ERR: Request is empty"
+        return get_single_req(req) if is_single else get_multi_req(req)
+    except Exception as e:
+        return "get request caught exception: {}\n{}".format(type(e), str(e))
 
 
 def get_single_req(req):
@@ -85,12 +89,11 @@ def get_user_info_from_es(name, mint, limit_n=1):
     }
 
     es = Elasticsearch(
-        ['es-cn-45912d6qn0008bb67.public.elasticsearch.aliyuncs.com'],
-        http_auth=('elastic', 'MDR_test'),
+        env.es_hosts,
         port=9200,
         use_ssl=False
     )
-    resp = es.search(index="patient-temperature-test", body=body)
+    resp = es.search(index=env.es_index, body=body)
     return json.dumps(sorted(resp.get('hits', {}).get('hits', []),
                              key=sort_hits, reverse=True) if resp else None)
 
