@@ -1,5 +1,7 @@
 import time
+import json
 import random
+import requests
 
 from elasticsearch import Elasticsearch, RequestsHttpConnection
 
@@ -38,7 +40,9 @@ def gen_patient(name, timestamp, period=10):
 
     min_temp = 335
     max_temp = 390
-    temperature = random.randint(340, 370)
+    temperature = random.randint(340, 375)
+    heart_rate = random.randint(60, 80)
+    oxy = random.randint(940, 990)
     for i in range(period):
         temperature = temperature + random.randint(-3, 3)
         temperature = max_temp if temperature > max_temp else temperature
@@ -48,15 +52,21 @@ def gen_patient(name, timestamp, period=10):
             'name': name,
             'gender': gender.get(name, 'male'),
             'timestamp': (timestamp + i) * 1000,
+            #'heart_rate': heart_rate,
+            #'blood_oxygen': oxy / 10.,
             'temperature': temperature / 10.
         }
-
-        create_doc(body)
+        ipadd = '127.0.0.1'
+        data = {'data': json.dumps({'d_list': [body]})}
+        resp = requests.post("http://{}:5000/post".format(ipadd), data=data, timeout=3)
+        print("Resp Status: {}".format(resp))
+        print("Resp Content: {}".format(resp.content))
+        #create_doc(body)
 
 
 if __name__ == '__main__':
-    period = 300
+    period = 1
     timestamp = int(time.time()) - period - 200
-    for name in ['Carl', 'Coca', 'Sprite', 'Wachowski']:
+    for name in ['Carl']:#, 'Coca', 'Sprite', 'Wachowski']:
         print('Start create fake patient {}'.format(name))
         gen_patient(name, timestamp, period=period)

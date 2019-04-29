@@ -1,5 +1,5 @@
 import json
-from Server.app import es
+from elasticsearch import Elasticsearch
 
 
 def get_request(req, is_single):
@@ -84,6 +84,12 @@ def get_user_info_from_es(name, mint, limit_n=1):
         }
     }
 
+    es = Elasticsearch(
+        ['es-cn-45912d6qn0008bb67.public.elasticsearch.aliyuncs.com'],
+        http_auth=('elastic', 'MDR_test'),
+        port=9200,
+        use_ssl=False
+    )
     resp = es.search(index="patient-temperature-test", body=body)
     return json.dumps(sorted(resp.get('hits', {}).get('hits', []),
                              key=sort_hits, reverse=True) if resp else None)
