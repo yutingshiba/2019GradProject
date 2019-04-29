@@ -2,15 +2,15 @@ import time
 import json
 import random
 import requests
+from Server.clientAPI import env
 
 from elasticsearch import Elasticsearch, RequestsHttpConnection
 
 
-def create_doc(body, index='patient-temperature-test', doc_type='patient_temperature'):
+def create_doc(body, index=env.es_index, doc_type='_doc'):
 
     es = Elasticsearch(
-        ['es-cn-45912d6qn0008bb67.public.elasticsearch.aliyuncs.com'],
-        http_auth=('elastic', 'MDR_test'),
+        env.es_hosts,
         port=9200,
         use_ssl=False
     )
@@ -43,6 +43,7 @@ def gen_patient(name, timestamp, period=10):
     temperature = random.randint(340, 375)
     heart_rate = random.randint(60, 80)
     oxy = random.randint(940, 990)
+    body_list = []
     for i in range(period):
         temperature = temperature + random.randint(-3, 3)
         temperature = max_temp if temperature > max_temp else temperature
@@ -52,21 +53,24 @@ def gen_patient(name, timestamp, period=10):
             'name': name,
             'gender': gender.get(name, 'male'),
             'timestamp': (timestamp + i) * 1000,
-            #'heart_rate': heart_rate,
-            #'blood_oxygen': oxy / 10.,
+            'heart_rate': heart_rate,
+            'blood_oxygen': oxy / 10.,
             'temperature': temperature / 10.
         }
-        ipadd = '127.0.0.1'
-        data = {'data': json.dumps({'d_list': [body]})}
-        resp = requests.post("http://{}:5000/post".format(ipadd), data=data, timeout=3)
-        print("Resp Status: {}".format(resp))
-        print("Resp Content: {}".format(resp.content))
-        #create_doc(body)
+        body_list.append(body)
+    #ipadd = '127.0.0.1'
+    ipadd = '18.223.116.5'
+    data = {'data': json.dumps({'d_list': body_list, 'index': 'patient_'})}
+    resp = requests.post("http://{}/post".format(ipadd), data=data, timeout=10)
+    #resp = requests.get("http://{}/getSingle".format(ipadd), timeout=4)
+    print("Resp Status: {}".format(resp))
+    print("Resp Content: {}".format(resp.content))
+    #create_doc(body)
 
 
 if __name__ == '__main__':
-    period = 1
-    timestamp = int(time.time()) - period - 200
-    for name in ['Carl']:#, 'Coca', 'Sprite', 'Wachowski']:
-        print('Start create fake patient {}'.format(name))
-        gen_patient(name, timestamp, period=period)
+    period = 60
+    cur_timestamp = int(time.time()) - period - 200
+    for uname in ['Coca', 'Sprite', 'Wachowski']:
+        print('Start create fake patient {}'.format(uname))
+        gen_patient(uname, cur_timestamp, period=period)
