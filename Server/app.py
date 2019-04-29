@@ -9,9 +9,8 @@
 from flask import Flask
 from flask import request
 
-from Server.clientAPI import post_utils
-from Server.clientAPI import get_utils
-
+from clientAPI import post_utils
+from clientAPI import get_utils
 
 app = Flask(__name__)
 
@@ -38,5 +37,5 @@ def post_request():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
-    #app.run(host='0.0.0.0', port=80)
+    #app.run(debug=True, host='0.0.0.0', port=80)
+    app.run()
